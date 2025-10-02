@@ -1,0 +1,78 @@
+[project]
+name = "oppm"
+version = "0.1.0"
+description = "A lightweight portable application manager"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "typer>=0.19.2",
+]
+
+[project.scripts]
+oppm = "oppm.cli:main"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["uv_build >= 0.8.17, <0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
+    "ruff>=0.13.2",
+    "typos>=1.37.1",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+  # Pyflakes
+  "F",
+  # Pycodestyle
+  "E",
+  "W",
+  # Isort
+  "I",
+  # Comprehensions
+  "C4",
+  # Debugger
+  "T100",
+  # Pyupgrade
+  "UP",
+  # Flake8-pyi
+  "PYI",
+  # Bugbear
+  "B",
+  # Pylint
+  "PLE",
+  # Flake8-simplify
+  "SIM101",
+  # Flake8-use-pathlib
+  "PTH",
+  # Pygrep-hooks
+  "PGH004",
+  # Flake8-type-checking
+  "TC",
+  # Flake8-raise
+  "RSE",
+  # Refurb
+  "FURB",
+  # Flake8-future-annotations
+  "FA",
+  # Yesqa
+  "RUF100",
+]
+ignore = [
+  "E501", # line too long, duplicate with ruff fmt
+  "F401", # imported but unused, duplicate with pyright
+  "F841", # local variable is assigned to but never used, duplicate with pyright
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
