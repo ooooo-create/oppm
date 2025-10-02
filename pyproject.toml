@@ -21,6 +21,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
+    "pyrefly>=0.35.0",
     "pytest>=8.4.2",
     "ruff>=0.13.2",
     "typos>=1.37.1",
@@ -72,6 +73,14 @@ ignore = [
   "E501", # line too long, duplicate with ruff fmt
   "F401", # imported but unused, duplicate with pyright
   "F841", # local variable is assigned to but never used, duplicate with pyright
+]
+
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    '**/*venv/**\*',
 ]
 
 [tool.ruff.lint.isort]

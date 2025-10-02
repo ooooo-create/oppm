@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import TypedDict
 
+# pyrefly: ignore  # import-error
 import regex
 
 PATTERN = r"^\s*(?:success|error|warning|info|step|debug).*?\p{So}"

@@ -73,8 +73,8 @@ def test_save_metadata_with_unicode(temp_meta_file):
     """Test saving metadata with unicode characters."""
     metadata: Metadata = {
         "apps": [
-            {"name": "中文应用", "path": "/path/to/中文应用"},
-            {"name": "日本語アプリ", "path": "/path/to/日本語"},
+            {"name": "中文应用", "relative_path": "/path/to/中文应用"},
+            {"name": "日本語アプリ", "relative_path": "/path/to/日本語"},
         ]
     }
 
