@@ -447,5 +447,5 @@ class TestExecutableManagement:
         show_shims(oppm_config)
 
         captured = capsys.readouterr()
-        assert "Installed shims" in captured.out
+        assert "🔗 Installed Shims" in captured.out
         assert "sample.exe" in captured.out
