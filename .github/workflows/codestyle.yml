@@ -1,0 +1,33 @@
+name: codestyle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-test:
+    runs-on: windows-latest
+    if: github.repository_owner == github.actor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Install Python 3.13
+        run: uv python install 3.13
+      - name: Install dependencies
+        run: uv python install ruff typos regex
+      - name: Run redundancy symbol check
+        run: |
+          uv run regex ./tools/redundancy_symbol.py
+      - name: Run typos
+        run: |
+          uv run typos
+      - name: Run ruff linter
+        run: |
+          uv run ruff check
+      - name: Run ruff formatting
+        run: |
+          uv run ruff format --check

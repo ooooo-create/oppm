@@ -52,7 +52,7 @@ def _print_shims_to_path_instructions(shims_dir: Path) -> None:
 def _extract_and_place_archive(archive_path: Path, target_dir: Path) -> None:
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
-        step("📦 Extracting archive to temporary location...")
+        step("Extracting archive to temporary location...")
 
         shutil.unpack_archive(archive_path, temp_dir, filter="data")
 
@@ -67,7 +67,7 @@ def _extract_and_place_archive(archive_path: Path, target_dir: Path) -> None:
             shutil.rmtree(target_dir)
 
         _ = shutil.move(str(extracted_root), str(target_dir))
-        success(f"✅ Extracted to: {target_dir}")
+        success(f"Extracted to: {target_dir}")
 
 
 def initialize(root_dir: Path) -> None:
@@ -223,7 +223,7 @@ def migrate_root(old_root_dir: Path, new_root_dir: Path) -> None:
         _ = shutil.move(str(old_root_dir), str(new_root_dir))
     except Exception as e:
         raise MigrationError(f"Failed to move directory: {e}") from e
-    success("✅ Metadata paths are relative, no update needed.")
+    success("Metadata paths are relative, no update needed.")
     new_meta_file = new_root_dir / "meta.json"
     new_apps_dir = new_root_dir / "apps"
     new_shims_dir = new_root_dir / "shims"
@@ -256,7 +256,7 @@ def pack(config: OPPMConfig, output_path: Path | None = None, overwrite: bool = 
         raise PackError(
             f"Output file already exists: {output_file}\nUse the '--overwrite' flag if you want to replace it."
         )
-    step("📦 Starting to pack OPPM directory...")
+    step("Starting to pack OPPM directory...")
     info(f"   Source: {root_dir}")
     info(f"   Destination: {output_file}")
     try:
@@ -270,10 +270,10 @@ def pack(config: OPPMConfig, output_path: Path | None = None, overwrite: bool = 
                 f"Unexpected error: packed file '{final_archive_path}' does not match expected output '{output_file}'."
             )
         archive_size_mb = output_file.stat().st_size / (1024 * 1024)
-        success("\n🎉 Packing complete!")
+        success("Packing complete!", pre="\n")
         info(f"   Archive: {output_file}")
         info(f"   Size: {archive_size_mb:.2f} MB")
-        info("\n💡 Use 'oppm rebuild' to restore this backup.")
+        info("Use 'oppm rebuild' to restore this backup.", pre="\n")
     except Exception as e:
         # Cleanup incomplete file on failure
         if output_file.exists():
@@ -294,7 +294,7 @@ def rebuild(archive_path: Path, new_root_dir: Path | None = None) -> None:
             from .config import load_config
 
             target_dir = load_config().root_dir
-            info(f"📁 Using existing root directory for rebuild: {target_dir}")
+            info(f"Using existing root directory for rebuild: {target_dir}")
         except Exception as e:
             raise InvalidInputError(
                 "Rebuild target directory not specified and no config found.\nPlease specify a target with '-r <path>' or run 'oppm init' first."
@@ -310,7 +310,7 @@ def rebuild(archive_path: Path, new_root_dir: Path | None = None) -> None:
         meta_file = target_dir / "meta.json"
         apps_dir = target_dir / "apps"
         shims_dir = target_dir / "shims"
-        step("⚙️  Updating main configuration file...")
+        step("Updating main configuration file...")
         new_config = OPPMConfig(
             root_dir=target_dir,
             apps_dir=apps_dir,
@@ -318,8 +318,8 @@ def rebuild(archive_path: Path, new_root_dir: Path | None = None) -> None:
             shims_dir=shims_dir,
         )
         save_config(new_config)
-        success("✅ Configuration saved.")
-        success("\n🎉 Rebuild complete!")
+        success("Configuration saved.")
+        success("Rebuild complete!", pre="\n")
         info(f"   Root is now: {target_dir}")
         _print_shims_to_path_instructions(shims_dir)
     except Exception as e:

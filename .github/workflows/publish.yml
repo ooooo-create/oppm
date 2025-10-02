@@ -9,6 +9,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    if: ${{ github.event }}
     environment:
       name: pypi
     permissions:
