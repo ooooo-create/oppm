@@ -383,3 +383,209 @@ def show_config(config: OPPMConfig) -> None:
     info(f"  - Metadata File: {config.meta_file}")
     info(f"  - Shims Directory: {config.shims_dir}")
     info(f"\nConfiguration file location: {CONFIG_FILE}")
+
+
+def verify_health(config: OPPMConfig, fix: bool) -> bool:
+    step("Verifying OPPM metadata...")
+    info(f"Root: {config.root_dir}")
+    info(f"Apps: {config.apps_dir}")
+    if not config.meta_file.exists():
+        error(f"Metadata file not found: {config.meta_file}")
+        return False
+    if not config.apps_dir.exists():
+        error(f"Applications directory not found: {config.apps_dir}")
+        return False
+    if not config.shims_dir.exists():
+        error(f"Shims directory not found: {config.shims_dir}")
+        return False
+
+    try:
+        meta = load_metadata(config.meta_file)
+    except Exception as e:
+        error(f"Failed to load metadata: {e}")
+        return False
+
+    issues_found = False
+    invalid_apps: list[str] = []
+    empty_apps: list[str] = []
+
+    info(f"Checking {len(meta['apps'])} apps in metadata...", pre="\n")
+    for app in meta["apps"]:
+        app_name = app["name"]
+        relative_path = app["relative_path"]
+        abs_path = config.root_dir / relative_path
+
+        if not abs_path.exists():
+            error(f"{app_name}: Directory not found")
+            info(f"Expected: {abs_path}")
+            info(f"Relative: {relative_path}")
+            invalid_apps.append(app_name)
+            issues_found = True
+            continue
+        if not abs_path.is_dir():
+            error(f"{app_name}: Not a directory")
+            info(f"Path: {abs_path}")
+            invalid_apps.append(app_name)
+            issues_found = True
+            continue
+
+        if not any(abs_path.iterdir()):
+            warning(f"{app_name}: Directory is empty")
+            info(f"Path: {abs_path}")
+            empty_apps.append(app_name)
+            issues_found = True
+            continue
+
+        success(f"{app_name}: OK ({relative_path})")
+
+    info("Checking for orphaned directories...", pre="\n")
+    orphaned: set[str] = set()
+    files: set[str] = set()
+    if config.apps_dir.exists():
+        actual_apps = {d.name for d in config.apps_dir.iterdir() if d.is_dir()}
+        files = {f.name for f in config.apps_dir.iterdir() if not f.is_dir()}
+        meta_apps = {app["name"] for app in meta["apps"]}
+        orphaned = actual_apps - meta_apps
+        if len(orphaned) > 0:
+            warning(f"Found {len(orphaned)} orphaned directories:")
+            for app_name in sorted(orphaned):
+                info(f"    {app_name}")
+            issues_found = True
+        else:
+            success("No orphaned directories found")
+
+        if len(files) > 0:
+            warning(f"Found {len(files)} files in apps directory, it is unexpected:")
+            for file_name in sorted(files):
+                info(f"    {file_name}")
+            issues_found = True
+        else:
+            success("No single files found in apps directory")
+
+    broken_shims: list[str] = []
+    external_shims: list[str] = []
+    non_symlink_files: list[str] = []
+    info("Checking shims...", pre="\n")
+    if config.shims_dir.exists():
+        apps_dir_resolved = config.apps_dir.resolve()
+        for shim_path in config.shims_dir.iterdir():
+            shim_name = shim_path.name
+            if not shim_path.is_symlink():
+                warning(f"{shim_name}: Not a symlink")
+                non_symlink_files.append(shim_name)
+                issues_found = True
+                continue
+            try:
+                target = shim_path.resolve()
+                if not target.exists():
+                    error(f"{shim_name}: Broken symlink (target doesn't exist)")
+                    broken_shims.append(shim_name)
+                    issues_found = True
+                    continue
+
+                if not target.is_relative_to(apps_dir_resolved):
+                    warning(f"{shim_name}: Points outside apps directory")
+                    warning(f"Target: {target}")
+                    external_shims.append(shim_name)
+                    issues_found = True
+            except (OSError, RuntimeError) as e:
+                error(f"{shim_name}: Error reading symlink: {e}")
+                broken_shims.append(shim_name)
+                issues_found = True
+    if len(broken_shims) == 0:
+        success("No broken shims found")
+    if len(external_shims) == 0:
+        success("No external shims found")
+    if len(non_symlink_files) == 0:
+        success("No non-symlink files found")
+
+    console.print("\n" + "=" * 60)
+    if not issues_found:
+        success("All checks passed! Metadata is valid.")
+        return True
+
+    error("    Found issues:")
+    if invalid_apps:
+        info(f"   • {len(invalid_apps)} invalid/missing apps: {', '.join(invalid_apps)}")
+    if empty_apps:
+        info(f"   • {len(empty_apps)} empty apps: {', '.join(empty_apps)}")
+    if len(orphaned) > 0:
+        info(f"   • {len(orphaned)} orphaned directories: {', '.join(sorted(orphaned))}")
+    if len(files) > 0:
+        info(f"   • {len(files)} unexpected single files: {', '.join(files)}")
+    if broken_shims:
+        info(f"   • {len(broken_shims)} broken shims: {', '.join(broken_shims)}")
+    if external_shims:
+        info(f"   • {len(external_shims)} external shims: {', '.join(external_shims)}")
+    if non_symlink_files:
+        info(f"   • {len(non_symlink_files)} non-symlink files: {', '.join(non_symlink_files)}")
+
+    if fix:
+        step("Applying fixes...", pre="\n")
+        fixed_count = 0
+        if invalid_apps or empty_apps:
+            apps_to_remove = set(invalid_apps + empty_apps)
+            original_count = len(meta["apps"])
+            meta["apps"] = [app for app in meta["apps"] if app["name"] not in apps_to_remove]
+            removed_count = original_count - len(meta["apps"])
+            if removed_count > 0:
+                save_metadata(config.meta_file, meta)
+                success(f"Removed {removed_count} invalid entries from metadata")
+                fixed_count += removed_count
+
+        if len(orphaned) > 0:
+            for app_name in sorted(orphaned):
+                app_dir = config.apps_dir / app_name
+                relative_path = app_dir.relative_to(config.root_dir)
+                meta["apps"].append({"name": app_name, "relative_path": relative_path.as_posix()})
+                fixed_count += 1
+            save_metadata(config.meta_file, meta)
+            success(f"Added {len(orphaned)} orphaned directories to metadata")
+
+        if len(files) > 0:
+            for app_name in sorted(files):
+                app_dir = config.apps_dir / app_name
+                app_dir.unlink()
+                fixed_count += 1
+
+        if broken_shims:
+            for shim_name in broken_shims:
+                shim_path = config.shims_dir / shim_name
+                if shim_path.exists():
+                    shim_path.unlink()
+            success(f"Removed {len(broken_shims)} broken shims")
+            fixed_count += len(broken_shims)
+
+        if external_shims:
+            for shim_name in external_shims:
+                shim_path = config.shims_dir / shim_name
+                if shim_path.exists():
+                    shim_path.unlink()
+            success(f"Removed {len(external_shims)} external shims")
+            fixed_count += len(external_shims)
+
+        if non_symlink_files:
+            for file_name in non_symlink_files:
+                file_path = config.shims_dir / file_name
+                if file_path.exists():
+                    file_path.unlink()
+            success(f"Removed {len(non_symlink_files)} non-symlink files")
+            fixed_count += len(non_symlink_files)
+
+        success(f"Fixed {fixed_count} issues!", pre="\n")
+        warning("Reun 'oppm health --fix' more times will be better")
+        return True
+
+    info("Suggestions:", pre="\n")
+    if invalid_apps or empty_apps:
+        info("   • Run 'oppm health --fix' to remove invalid entries")
+        info("   • Or manually run 'oppm update' to sync metadata")
+    if len(orphaned) > 0:
+        info("   • Run 'oppm health --fix' to add orphaned directories")
+        info("   • Or manually run 'oppm update' to sync metadata")
+    if len(files) > 0:
+        info("   • Run 'oppm health --fix' to remove single files")
+    if broken_shims or external_shims or non_symlink_files:
+        info("   • Run 'oppm health --fix' to clean up invalid shims")
+
+    return False

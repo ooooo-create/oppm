@@ -4,28 +4,28 @@ from rich.table import Table
 console = Console()
 
 
-def success(message: str) -> None:
-    console.print(f"✅ {message}", style="bold green")
+def success(message: str, pre: str = "", post: str = "") -> None:
+    console.print(f"{pre}✅  {message}{post}", style="bold green")
 
 
-def error(message: str) -> None:
-    console.print(f"❌ {message}", style="bold red")
+def error(message: str, pre: str = "", post: str = "") -> None:
+    console.print(f"{pre}❌  {message}{post}", style="bold red")
 
 
-def warning(message: str) -> None:
-    console.print(f"⚠️  {message}", style="bold yellow")
+def warning(message: str, pre: str = "", post: str = "") -> None:
+    console.print(f"{pre}⚠️  {message}{post}", style="bold yellow")
 
 
-def info(message: str) -> None:
-    console.print(f"ℹ️  {message}", style="cyan")
+def info(message: str, pre: str = "", post: str = "") -> None:
+    console.print(f"{pre}ℹ️  {message}{post}", style="cyan")
 
 
-def step(message: str) -> None:
-    console.print(f"📦 {message}", style="blue")
+def step(message: str, pre: str = "", post: str = "") -> None:
+    console.print(f"{pre}📦  {message}{post}", style="blue")
 
 
-def debug(message: str) -> None:
-    console.print(f"🔍 {message}", style="dim")
+def debug(message: str, pre: str = "", post: str = "") -> None:
+    console.print(f"{pre}🔍  {message}{post}", style="dim")
 
 
 def create_table(title: str, *columns: str) -> Table:

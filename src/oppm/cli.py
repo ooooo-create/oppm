@@ -143,19 +143,18 @@ def rebuild(
         raise typer.Exit(code=1) from e
 
 
-# [TODO]
-# @app.command()
-# def verify(
-#     fix: Annotated[bool, typer.Option("--fix", help="Automatically fix issues")] = False,
-# ):
-#     try:
-#         config = load_config()
-#         is_valid = commands.verify_metadata(config, fix)
-#         if not is_valid and not fix:
-#             raise typer.Exit(code=1)
-#     except OPPMError as e:
-#         typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
-#         raise typer.Exit(code=1) from e
+@app.command()
+def health(
+    fix: Annotated[bool, typer.Option("--fix", help="Automatically fix issues")] = False,
+):
+    try:
+        config = load_config()
+        is_valid = commands.verify_health(config, fix)
+        if not is_valid and not fix:
+            raise typer.Exit(code=1)
+    except OPPMError as e:
+        typer.secho(f"Error: {e}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from e
 
 
 @exe_app.command("add")
