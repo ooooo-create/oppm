@@ -9,7 +9,8 @@ on:
 jobs:
   run-test:
     runs-on: windows-latest
-    if: github.repository_owner == github.actor
+    if: |
+      !contains(github.event.head_commit.message, 'skip codestyle')
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -17,17 +18,15 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install Python 3.13
         run: uv python install 3.13
-      - name: Install dependencies
-        run: uv python install ruff typos regex
       - name: Run redundancy symbol check
         run: |
-          uv run regex ./tools/redundancy_symbol.py
+          uv run --with regex ./tools/redundancy_symbol.py
       - name: Run typos
         run: |
-          uv run typos
+          uvx typos
       - name: Run ruff linter
         run: |
-          uv run ruff check
+          uvx ruff check
       - name: Run ruff formatting
         run: |
-          uv run ruff format --check
+          uvx ruff format --check
