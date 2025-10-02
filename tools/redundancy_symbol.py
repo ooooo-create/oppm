@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import TypedDict
+
 import regex
 
 PATTERN = r"^\s*(?:success|error|warning|info|step|debug).*?\p{So}"
@@ -8,12 +9,14 @@ PATTERN = r"^\s*(?:success|error|warning|info|step|debug).*?\p{So}"
 # print(regex.findall(PATTERN, text))
 src_path = Path(__file__).parent.parent / "src" / "oppm"
 
+
 class ErrorLine(TypedDict):
     file: str
     line_number: int
     message: str
 
-error_lines : list[ErrorLine] = []
+
+error_lines: list[ErrorLine] = []
 
 for file in src_path.rglob("*.py"):
     with file.open("r", encoding="utf-8") as f:
