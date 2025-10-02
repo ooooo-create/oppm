@@ -2,7 +2,7 @@
 
 > 🚀 A lightweight portable application manager for Windows. Other OS maybe also work, but I'm not sure if there's a need for it.
 
-[![Tests](https://img.shields.io/badge/tests-88%20passed-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.13%2B-blue)]()
+[![Python](https://img.shields.io/badge/python-3.13%2B-blue)]()
 
 ## 📖 什么是 OPPM？
 
@@ -14,7 +14,7 @@ OPPM (Ooooo's Portable Package Manager) 是一个专为 Windows 设计的**便�
 
 - 📦 **下载了 .zip 压缩包**：里面是独立软件（开源工具、模拟器、游戏 MOD）— 解压到哪里？`C:\Downloads\my-tool-v1.2`？还是 `D:\Program Files\SomeTool`？时间一长，完全忘了装过什么、装在哪里。
 
-- 📄 **下载了单独的 .exe 文件**：很多命令行工具（如 `yt-dlp.exe`、`kubectl.exe`）就是一个二进制文件 — 放在哪里？`C:\Windows\System32`（危险！）？还是手动创建 `C:\bin` 目录管理？
+- 📄 **下载了单独的 .exe 文件**：很多命令行工具是一个二进制文件 — 如果手动下载之后放在哪里？`C:\Windows\System32`（危险！）？还是手动创建 `C:\bin` 目录管理？
 
 **OPPM 就是为了解决这些问题而生的！** 它帮你：
 
@@ -22,15 +22,6 @@ OPPM (Ooooo's Portable Package Manager) 是一个专为 Windows 设计的**便�
 - ✅ **自动 PATH 管理**：通过 shims 机制，无需手动配置环境变量
 - ✅ **保持系统干净**：不污染注册表，不修改系统目录
 - ✅ **轻松迁移**：整个 `.oppm` 目录打包即可迁移到新电脑
-
-### 🎯 适用场景
-
-OPPM 专为管理**"绿色软件"**和**不提供标准安装程序的命令行工具**而设计：
-
-- **便携软件爱好者**：从 GitHub、官网下载的便携版工具，无需安装即用
-- **命令行工具收集者**：管理各种单文件 CLI 工具（`ffmpeg.exe`、`ripgrep.exe` 等）
-- **系统洁癖患者**：不想污染注册表和系统目录，保持系统干净
-- **多环境用户**：需要在多台电脑间快速迁移工具集
 
 ### 📦 支持的格式
 
@@ -116,6 +107,7 @@ oppm clean
 | `oppm migrate <new_path>` | 迁移到新目录 | `oppm migrate D:\newpath` |
 | `oppm pack` | 打包整个 OPPM 目录为 tar.gz | `oppm pack -o backup.tar.gz` |
 | `oppm rebuild <archive>` | 从打包文件恢复 OPPM | `oppm rebuild backup.tar.gz -r D:\newpath` |
+| `oppm health [--fix]` | 诊断和检查完整性 | `oppm health --fix` |
 
 ## 🏗️ 目录结构
 
@@ -123,11 +115,11 @@ oppm clean
 ~/.oppm/
 ├── apps/           # 已安装的应用
 │   ├── geek/
-│   ├── zed/
+│   ├── jj/
 │   └── ...
 ├── shims/          # 可执行文件的符号链接（需加入 PATH）
 │   ├── geek.exe
-│   ├── zed.exe
+│   ├── jj.exe
 │   └── ...
 └── meta.json       # 应用元数据
 ```
@@ -157,41 +149,10 @@ oppm init -r D:\MyTools
 root_dir = "C:/Users/YourName/.oppm"
 apps_dir = "C:/Users/YourName/.oppm/apps"
 meta_file = "C:/Users/YourName/.oppm/meta.json"
+shims_dir = "C:/Users/YourName/.oppm/shims"
 ```
 
-## 🎓 典型工作流
-
-### 场景 1：管理开发工具
-
-```bash
-# 下载 Node.js 便携版
-# 从 https://nodejs.org/dist/... 下载 node-v20.x.x-win-x64.zip
-
-# 安装
-oppm install node-v20.x.x-win-x64.zip -n nodejs
-
-# 添加到 PATH
-oppm exe add ~/.oppm/apps/nodejs/node.exe
-
-# 验证
-node --version
-```
-
-### 场景 2：快速安装多个工具
-
-```bash
-# 批量安装
-oppm install vim.zip -n vim
-oppm install git-portable.zip -n git
-oppm install python-embed.zip -n python
-
-# 添加所有可执行文件
-oppm exe add ~/.oppm/apps/vim/vim.exe
-oppm exe add ~/.oppm/apps/git/bin/git.exe
-oppm exe add ~/.oppm/apps/python/python.exe
-```
-
-### 场景 3：迁移到新电脑
+### 场景 1：迁移到新电脑
 
 ```bash
 # 使用 pack 和 rebuild 命令（推荐）
@@ -237,15 +198,18 @@ oppm exe add <path_to_exe>
 - [x] Shim 管理（使用相对路径，支持迁移）
 - [x] 元数据同步
 - [x] 迁移功能
-- [x] 打包和恢复功能（pack/rebuild）**
-- [x] 完整测试覆盖（77 个测试通过）
+- [x] 打包和恢复功能（pack/rebuild）
+- [x] 健康检查和自动修复策略
 
-### 🚧 计划中或者并没有计划
-- [x] 跨机压缩打包，rebuild 命令支持 ✅
+### 🚧 计划中
+- [ ] 为 app meta 添加一个类别项（category），如果是字体，直接存放目录还是记录 URL 更好？
+- [ ] GitHub Releases 集成（可能也包含从 URL 直接下载安装这个功能）
+- [ ] 合理管理 Unicode 符号的使用
+
+### ℹ️ 不确定
 - [ ] 从 URL 直接下载安装
 - [ ] 应用仓库系统（类似 Scoop buckets）
 - [ ] 版本管理和升级功能
-- [ ] GitHub Releases 集成
 - [ ] 应用搜索和描述
 - [ ] 依赖管理
 
@@ -262,6 +226,9 @@ cd ppm
 
 # 安装开发依赖
 uv sync
+
+# 配置 pre-commit
+uv run pre-commit install
 
 # 运行测试
 uv run pytest -v
