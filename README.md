@@ -8,7 +8,7 @@
 
 OPPM (Ooooo's Portable Package Manager) 是一个专为 Windows 设计的**便携应用管理工具**。
 
-### 💡 核心价值
+### 💡 Why?
 
 你是否经常遇到这样的困扰？
 
@@ -116,10 +116,12 @@ oppm clean
 ├── apps/           # 已安装的应用
 │   ├── geek/
 │   ├── jj/
+│   ├── zed/
 │   └── ...
 ├── shims/          # 可执行文件的符号链接（需加入 PATH）
 │   ├── geek.exe
 │   ├── jj.exe
+│   ├── zed.exe
 │   └── ...
 └── meta.json       # 应用元数据
 ```
