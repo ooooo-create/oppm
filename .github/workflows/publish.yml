@@ -9,7 +9,6 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: github.repository_owner == github.actor
     environment:
       name: pypi
     permissions:
